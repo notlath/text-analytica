@@ -1,0 +1,16 @@
+// filepath: backend/render.yaml
+services:
+  - type: web
+    name: text-analytica-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn api.index:app --bind 0.0.0.0:$PORT
+    disk:
+      name: pickle-storage
+      mountPath: /opt/render/project/src/pickles
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
