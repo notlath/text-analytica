@@ -161,14 +161,16 @@ def load_dataset():
         if (dataset_df := load_pickle("corpus_documents.pkl")) is not None:
             print(f"✓ Loaded dataset from pickle: {len(dataset_df)} documents")
             return
-        
+
         # Fallback: try local dataset.pkl
         if os.path.exists("dataset.pkl"):
             with open("dataset.pkl", "rb") as f:
                 dataset_df = pickle.load(f)
-                print(f"✓ Loaded dataset from local pickle: {len(dataset_df)} documents")
+                print(
+                    f"✓ Loaded dataset from local pickle: {len(dataset_df)} documents"
+                )
                 return
-        
+
         # Last resort: Download from Kaggle (not recommended for production due to memory)
         print("⚠ Warning: Downloading dataset from Kaggle (uses significant memory)")
         dataset_path = kagglehub.dataset_download(
@@ -191,7 +193,7 @@ def load_dataset():
         # Read the dataset into a pandas DataFrame
         dataset_df = pd.read_csv(file_path)
         print(f"✓ Loaded dataset from Kaggle CSV: {len(dataset_df)} documents")
-        
+
     except Exception as e:
         print(f"⚠ Error loading dataset: {e}")
         print("⚠ Continuing with empty dataset - some features may not work")
@@ -1030,7 +1032,7 @@ def initialize_app():
         ("tokenizers/punkt", "punkt"),
         ("corpora/wordnet", "wordnet"),
     ]
-    
+
     for resource_path, package_name in nltk_packages:
         try:
             nltk.data.find(resource_path)
@@ -1038,7 +1040,7 @@ def initialize_app():
         except LookupError:
             print(f"Downloading {package_name}...")
             nltk.download(package_name, quiet=True)
-    
+
     # punkt_tab is optional and sometimes problematic
     try:
         nltk.data.find("tokenizers/punkt_tab")
@@ -1050,30 +1052,20 @@ def initialize_app():
         except:
             print("⚠ punkt_tab not available, but punkt should work")
 
-    # Download pickle files from cloud storage if needed
-    pickle_files = {
-        "all_lda_models.pkl": os.getenv("PICKLE_LDA_URL"),
-        "corpus_documents.pkl": os.getenv("PICKLE_CORPUS_URL"),
-        "graph.pkl": os.getenv("PICKLE_GRAPH_URL"),
-        "network_statistics.pkl": os.getenv("PICKLE_STATS_URL"),
-        "trending_topics_per_group.pkl": os.getenv("PICKLE_TRENDING_URL"),
-    }
-
-    for filename, url in pickle_files.items():
-        if url:
-            try:
-                download_pickle_if_needed(filename, url)
-            except Exception as e:
-                print(f"Warning: Failed to download {filename}: {e}")
-
-    print("Loading dataset...")
-    load_dataset()
-    print("Loading topics...")
-    load_topics()
-    print("Loading author graph...")
-    load_author_graph()
+    # Skip pickle file downloads on low-memory systems (Render free tier)
+    # This allows the server to start without OOM errors
+    print("⚠ Running in minimal mode - pickle files not loaded to save memory")
+    print("⚠ Some features will return empty results")
+    print("⚠ To enable full functionality, upgrade to a plan with more RAM")
     
-    print("✓ Application initialized successfully!")
+    # Initialize with empty data structures
+    global dataset_df, all_topics, all_authors
+    dataset_df = pd.DataFrame()
+    all_topics = {}
+    all_authors = nx.MultiGraph()
+    
+    print("✓ Application initialized successfully (minimal mode)!")
+
 
 
 # Run initialization when module is imported (for Gunicorn)
