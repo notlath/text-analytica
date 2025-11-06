@@ -8,7 +8,10 @@ const HealthCheckPage = async () => {
   const { status, error } = await checkHealth();
   
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
-  const isConnected = status === "healthy";
+  
+  // status is the API response object, e.g., {status: "ok"}
+  const isConnected = !!status && !error;
+  const statusText = status ? JSON.stringify(status) : "No response";
   const errorMessage = error ? String(error) : "";
 
   return (
@@ -49,7 +52,7 @@ const HealthCheckPage = async () => {
             <div className="flex items-center justify-between">
               <span className="font-medium">Response:</span>
               <code className="text-sm bg-muted px-2 py-1 rounded">
-                {status || "No response"}
+                {statusText}
               </code>
             </div>
           </CardContent>
