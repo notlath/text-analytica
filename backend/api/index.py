@@ -26,7 +26,15 @@ import matplotlib.pyplot as plt
 import re
 
 app = Flask(__name__)
-CORS(app)
+# Update CORS to allow your Vercel frontend
+allowed_origins = [
+    "http://localhost:3000",  # Local development
+    os.getenv("FRONTEND_URL", ""),  # Production frontend
+]
+
+# Remove empty strings and apply CORS
+allowed_origins = [origin for origin in allowed_origins if origin]
+CORS(app, origins=allowed_origins if allowed_origins else "*")
 
 # Global object
 dataset_df: pd.DataFrame = None
