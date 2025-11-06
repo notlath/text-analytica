@@ -1,16 +1,23 @@
-// filepath: backend/render.yaml
 services:
   - type: web
     name: text-analytica-api
     env: python
     region: oregon
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn api.index:app --bind 0.0.0.0:$PORT
-    disk:
-      name: pickle-storage
-      mountPath: /opt/render/project/src/pickles
-      sizeGB: 1
+    buildCommand: pip install -r requirements.txt && python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt'); nltk.download('punkt_tab'); nltk.download('wordnet')"
+    startCommand: gunicorn api.index:app --bind 0.0.0.0:$PORT --workers 2 --timeout 300 --preload
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: ENVIRONMENT
+        value: production
+      - key: PICKLE_LDA_URL
+        value: https://drive.google.com/file/d/171k4KxmV7qiQmXdl0wvfXPq9Vc-A-LDW/view?usp=sharing
+      - key: PICKLE_CORPUS_URL
+        value: https://drive.google.com/file/d/1_-wSFDX33cNHMKaqx0KT4iIOYMbvJZoQ/view?usp=drive_link
+      - key: PICKLE_GRAPH_URL
+        value: https://drive.google.com/file/d/1CKnfEWdL6V0W0-GQH7BLPv_GV4EV6Naz/view?usp=drive_link
+      - key: PICKLE_STATS_URL
+        value: https://drive.google.com/file/d/1CKnfEWdL6V0W0-GQH7BLPv_GV4EV6Naz/view?usp=drive_link
+      - key: PICKLE_TRENDING_URL
+        value: https://drive.google.com/file/d/1CKnfEWdL6V0W0-GQH7BLPv_GV4EV6Naz/view?usp=drive_link

@@ -34,6 +34,27 @@ all_authors: nx.MultiGraph = None
 all_topics: dict[str, tuple[LdaMulticore, int, pd.DataFrame]] = {}
 
 
+def download_pickle_if_needed(filename: str, url: str):
+    """Download pickle file from cloud if it doesn't exist locally"""
+    pickle_path = Path("pickles") / filename
+
+    if pickle_path.exists():
+        print(f"✓ {filename} already exists")
+        return
+
+    print(f"Downloading {filename}...")
+    pickle_path.parent.mkdir(parents=True, exist_ok=True)
+
+    response = requests.get(url, stream=True, timeout=300)
+    response.raise_for_status()
+
+    with open(pickle_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            f.write(chunk)
+
+    print(f"✓ Downloaded {filename}")
+
+
 def save_pickle(path: str, object: Any):
     path_obj = Path("pickles") / path
     if not path_obj.parent.exists():
@@ -984,6 +1005,22 @@ if __name__ == "__main__":
         nltk.download("punkt_tab", quiet=True)
         nltk.download("wordnet", quiet=True)
 
+        # Download pickle files from cloud storage if needed
+    pickle_files = {
+        "all_lda_models.pkl": os.getenv("PICKLE_LDA_URL"),
+        "corpus_documents.pkl": os.getenv("PICKLE_CORPUS_URL"),
+        "graph.pkl": os.getenv("PICKLE_GRAPH_URL"),
+        "network_statistics.pkl": os.getenv("PICKLE_STATS_URL"),
+        "trending_topics_per_group.pkl": os.getenv("PICKLE_TRENDING_URL"),
+    }
+
+    for filename, url in pickle_files.items():
+        if url:
+            try:
+                download_pickle_if_needed(filename, url)
+            except Exception as e:
+                print(f"Warning: Failed to download {filename}: {e}")
+
     print("Loading dataset...")
     load_dataset()
     print("Loading topics...")
@@ -992,4 +1029,9 @@ if __name__ == "__main__":
     load_author_graph()
 
     print("Starting flask host.")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    import os
+
+    port = int(os.getenv("PORT", 5000))
+    debug_mode = os.getenv("ENVIRONMENT") != "production"
+
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)
