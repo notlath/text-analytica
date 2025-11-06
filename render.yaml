@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: text-analytica-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt && python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt'); nltk.download('punkt_tab'); nltk.download('wordnet')"
+    startCommand: gunicorn api.index:app --bind 0.0.0.0:$PORT --workers 2 --timeout 300 --preload
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ENVIRONMENT
+        value: production
+      - key: FRONTEND_URL
+        value: https://text-analytica-wlt4.vercel.app
+      - key: PICKLE_LDA_URL
+        value: https://drive.google.com/uc?export=download&id=171k4KxmV7qiQmXdl0wvfXPq9Vc-A-LDW
+      - key: PICKLE_CORPUS_URL
+        value: =https://drive.google.com/uc?export=download&id=1_-wSFDX33cNHMKaqx0KT4iIOYMbvJZoQ
+      - key: PICKLE_GRAPH_URL
+        value: https://drive.google.com/uc?export=download&id=1CKnfEWdL6V0W0-GQH7BLPv_GV4EV6Naz
+      - key: PICKLE_STATS_URL
+        value: https://drive.google.com/uc?export=download&id=1eRnmJy2IKc60Z5QhjuD3TZPXBFNG4giX
+      - key: PICKLE_TRENDING_URL
+        value: https://drive.google.com/uc?export=download&id=1Ay4df3B30w9mKjNImQra09wiMTxsueua
