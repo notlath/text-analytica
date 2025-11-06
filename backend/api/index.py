@@ -13,6 +13,7 @@ import networkx as nx
 import pickle
 import nltk
 import re
+import requests
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import ast
@@ -219,7 +220,14 @@ def load_author_graph():
 
 def load_topics():
     global all_topics
-    all_topics = load_pickle("all_lda_models.pkl")
+    try:
+        all_topics = load_pickle("all_lda_models.pkl")
+        if all_topics is None:
+            print("⚠ Warning: all_lda_models.pkl not found, using empty dict")
+            all_topics = {}
+    except Exception as e:
+        print(f"⚠ Error loading topics: {e}")
+        all_topics = {}
 
 
 @app.route("/api/health")
@@ -1001,17 +1009,31 @@ if __name__ == "__main__":
     print("Starting the Flask application!")
 
     # Download NLTK data if needed
+    print("Checking NLTK data...")
+    nltk_packages = [
+        ("corpora/stopwords", "stopwords"),
+        ("tokenizers/punkt", "punkt"),
+        ("corpora/wordnet", "wordnet"),
+    ]
+    
+    for resource_path, package_name in nltk_packages:
+        try:
+            nltk.data.find(resource_path)
+            print(f"✓ {package_name} found")
+        except LookupError:
+            print(f"Downloading {package_name}...")
+            nltk.download(package_name, quiet=True)
+    
+    # punkt_tab is optional and sometimes problematic
     try:
-        nltk.data.find("corpora/stopwords")
-        nltk.data.find("tokenizers/punkt")
         nltk.data.find("tokenizers/punkt_tab")
-        nltk.data.find("corpora/wordnet")
-    except LookupError:
-        print("Downloading NLTK data...")
-        nltk.download("stopwords", quiet=True)
-        nltk.download("punkt", quiet=True)
-        nltk.download("punkt_tab", quiet=True)
-        nltk.download("wordnet", quiet=True)
+        print("✓ punkt_tab found")
+    except (LookupError, OSError):
+        try:
+            print("Downloading punkt_tab...")
+            nltk.download("punkt_tab", quiet=True)
+        except:
+            print("⚠ punkt_tab not available, but punkt should work")
 
         # Download pickle files from cloud storage if needed
     pickle_files = {

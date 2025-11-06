@@ -3,6 +3,7 @@ import { Fira_Sans, Fira_Mono } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "@/components/layout/layout-wrapper";
 import Toploader from "nextjs-toploader";
+import { ConnectionStatus } from "@/components/connection-status";
 
 const firaSans = Fira_Sans({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({
       >
         <Toploader color="var(--primary)" showSpinner={false} />
         <LayoutWrapper>{children}</LayoutWrapper>
+        <ConnectionStatus />
       </body>
     </html>
   );
