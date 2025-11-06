@@ -1005,8 +1005,10 @@ def corpus_wordcloud(year_group):
         return jsonify({"error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-if __name__ == "__main__":
-    print("Starting the Flask application!")
+# Initialize the application (runs when module is imported by Gunicorn)
+def initialize_app():
+    """Initialize NLTK data and load pickle files"""
+    print("Initializing Flask application...")
 
     # Download NLTK data if needed
     print("Checking NLTK data...")
@@ -1035,7 +1037,7 @@ if __name__ == "__main__":
         except:
             print("⚠ punkt_tab not available, but punkt should work")
 
-        # Download pickle files from cloud storage if needed
+    # Download pickle files from cloud storage if needed
     pickle_files = {
         "all_lda_models.pkl": os.getenv("PICKLE_LDA_URL"),
         "corpus_documents.pkl": os.getenv("PICKLE_CORPUS_URL"),
@@ -1057,11 +1059,17 @@ if __name__ == "__main__":
     load_topics()
     print("Loading author graph...")
     load_author_graph()
+    
+    print("✓ Application initialized successfully!")
 
-    print("Starting flask host.")
-    import os
 
+# Run initialization when module is imported (for Gunicorn)
+initialize_app()
+
+
+if __name__ == "__main__":
+    # This block only runs when executing: python api/index.py
+    print("Starting Flask development server...")
     port = int(os.getenv("PORT", 5000))
     debug_mode = os.getenv("ENVIRONMENT") != "production"
-
     app.run(host="0.0.0.0", port=port, debug=debug_mode)
