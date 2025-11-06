@@ -9,6 +9,7 @@ const HealthCheckPage = async () => {
   
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
   const isConnected = status === "healthy";
+  const errorMessage = error ? String(error) : "";
 
   return (
     <div className="container mx-auto py-8 space-y-6">
@@ -81,12 +82,12 @@ const HealthCheckPage = async () => {
       </div>
 
       {/* Error Alert */}
-      {!isConnected && error && (
+      {!isConnected && errorMessage && (
         <Alert variant="destructive">
           <XCircle className="h-4 w-4" />
           <AlertTitle>Connection Error</AlertTitle>
           <AlertDescription className="mt-2">
-            <p>{String(error)}</p>
+            <p>{errorMessage}</p>
             
             <div className="mt-4 space-y-2 text-sm">
               <p className="font-semibold">Troubleshooting steps:</p>
