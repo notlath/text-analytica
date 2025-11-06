@@ -157,13 +157,20 @@ def load_dataset():
         if dataset_df is not None:
             return
 
+        # Try to load from corpus_documents.pkl first (from Google Drive)
+        if (dataset_df := load_pickle("corpus_documents.pkl")) is not None:
+            print(f"✓ Loaded dataset from pickle: {len(dataset_df)} documents")
+            return
+        
+        # Fallback: try local dataset.pkl
         if os.path.exists("dataset.pkl"):
             with open("dataset.pkl", "rb") as f:
                 dataset_df = pickle.load(f)
+                print(f"✓ Loaded dataset from local pickle: {len(dataset_df)} documents")
                 return
-        raise Exception()
-    except:
-        # Download the dataset
+        
+        # Last resort: Download from Kaggle (not recommended for production due to memory)
+        print("⚠ Warning: Downloading dataset from Kaggle (uses significant memory)")
         dataset_path = kagglehub.dataset_download(
             "sumitm004/arxiv-scientific-research-papers-dataset"
         )
@@ -178,11 +185,17 @@ def load_dataset():
                 break
 
         if not csv_file:
-            raise "No CSV file found in the downloaded dataset."
+            raise Exception("No CSV file found in the downloaded dataset.")
 
         file_path = os.path.join(dataset_path, csv_file)
         # Read the dataset into a pandas DataFrame
         dataset_df = pd.read_csv(file_path)
+        print(f"✓ Loaded dataset from Kaggle CSV: {len(dataset_df)} documents")
+        
+    except Exception as e:
+        print(f"⚠ Error loading dataset: {e}")
+        print("⚠ Continuing with empty dataset - some features may not work")
+        dataset_df = pd.DataFrame()
 
 
 def load_author_graph():
